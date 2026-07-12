@@ -6,6 +6,11 @@ from fastapi.security import OAuth2PasswordRequestForm
 from typing import List, Optional
 from pydantic import BaseModel
 import datetime
+import sys
+import os
+
+# Fix for Vercel deployment: add the 'backend' folder to the Python path
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from utils import schemas
 from utils.database import get_db
