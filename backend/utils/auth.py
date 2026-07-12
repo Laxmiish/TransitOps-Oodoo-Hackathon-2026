@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta, timezone
-from jose import jwt, JWTError
+import jwt
 from fastapi import HTTPException, status, Depends
 from fastapi.security import OAuth2PasswordBearer
 
@@ -15,6 +15,7 @@ def create_access_token(data: dict):
     to_encode = data.copy()
     expire = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     to_encode.update({"exp": expire})
+    # PyJWT encodes — pure Python, no C extension
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
@@ -26,9 +27,10 @@ def verify_access_token(token: str, credentials_exception):
         user_id: int = payload.get("user_id")
         if email is None:
             raise credentials_exception
-        token_data = {"email": email, "role": role, "user_id": user_id}
-        return token_data
-    except JWTError:
+        return {"email": email, "role": role, "user_id": user_id}
+    except jwt.ExpiredSignatureError:
+        raise credentials_exception
+    except jwt.InvalidTokenError:
         raise credentials_exception
 
 def get_current_user(token: str = Depends(oauth2_scheme)):

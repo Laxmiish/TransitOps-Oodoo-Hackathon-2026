@@ -5,6 +5,6 @@ pydantic-settings
 python-dotenv
 sqlalchemy
 pg8000
-python-jose[cryptography]
-passlib[bcrypt]
+PyJWT
+argon2-cffi
 python-multipart
