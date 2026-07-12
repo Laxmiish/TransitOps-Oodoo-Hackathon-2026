@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Download } from 'lucide-react';
+import { Download, FileText } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { getVehicles, getTrips, getFuelLogs, getMaintenance } from '../services/dataService';
 import { Button } from '../components/common/Field';
+import { jsPDF } from 'jspdf';
+import { autoTable } from 'jspdf-autotable';
 
 function toCsv(rows, headers) {
   const escape = (val) => `"${String(val ?? '').replace(/"/g, '""')}"`;
@@ -71,6 +73,78 @@ export default function Reports() {
     downloadCsv('transitops_reports.csv', toCsv(report, headers));
   }
 
+  function handleExportPdf() {
+    const doc = new jsPDF({ orientation: 'landscape' });
+    const pageWidth = doc.internal.pageSize.getWidth();
+
+    doc.setFillColor(36, 36, 68);
+    doc.rect(0, 0, pageWidth, 28, 'F');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(18);
+    doc.setTextColor(255, 255, 255);
+    doc.text('TransitOps — Fleet Report', 14, 17);
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Generated: ${new Date().toLocaleString()}`, pageWidth - 14, 17, { align: 'right' });
+
+    doc.setTextColor(80, 80, 100);
+    doc.setFontSize(11);
+    doc.text(`Fleet Utilization: ${fleetUtilization}%`, 14, 38);
+
+    const tableHeaders = [
+      'Vehicle', 'Distance (km)', 'Fuel Used (L)',
+      'Efficiency (km/L)', 'Op. Cost', 'Revenue', 'ROI (%)'
+    ];
+
+    const tableRows = report.map((r) => [
+      `${r.regNo}`,
+      r.totalDistance.toLocaleString(),
+      r.totalFuelFromTrips.toLocaleString(),
+      r.fuelEfficiency || '—',
+      r.operationalCost.toLocaleString(),
+      r.revenue.toLocaleString(),
+      `${r.roi}%`,
+    ]);
+
+    autoTable(doc, {
+      startY: 44,
+      head: [tableHeaders],
+      body: tableRows,
+      theme: 'grid',
+      headStyles: {
+        fillColor: [242, 169, 59],
+        textColor: [36, 36, 68],
+        fontStyle: 'bold',
+        fontSize: 9,
+        halign: 'center',
+      },
+      bodyStyles: {
+        fontSize: 8.5,
+        textColor: [50, 50, 70],
+        halign: 'center',
+      },
+      alternateRowStyles: { fillColor: [248, 249, 252] },
+      styles: {
+        cellPadding: 3,
+        lineColor: [220, 220, 230],
+        lineWidth: 0.25,
+      },
+      margin: { left: 14, right: 14 },
+    });
+
+    const pageCount = doc.internal.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      const pageHeight = doc.internal.pageSize.getHeight();
+      doc.setFontSize(8);
+      doc.setTextColor(160, 160, 170);
+      doc.text(`Page ${i} of ${pageCount}`, pageWidth - 14, pageHeight - 8, { align: 'right' });
+      doc.text('TransitOps © ' + new Date().getFullYear(), 14, pageHeight - 8);
+    }
+
+    doc.save('transitops_report.pdf');
+  }
+
   if (loading) return <p className="text-sm text-[var(--color-text-muted)]">Crunching numbers…</p>;
 
   return (
@@ -80,9 +154,14 @@ export default function Reports() {
           <p className="text-xs font-medium uppercase tracking-wide text-[var(--color-text-muted)]">Fleet Utilization</p>
           <p className="font-display text-2xl font-semibold">{fleetUtilization}%</p>
         </div>
-        <Button variant="accent" onClick={handleExport}>
-          <Download size={16} /> Export CSV
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="accent" onClick={handleExport}>
+            <Download size={16} /> Export CSV
+          </Button>
+          <Button variant="accent" onClick={handleExportPdf}>
+            <FileText size={16} /> Export PDF
+          </Button>
+        </div>
       </div>
 
       <div className="rounded-2xl border border-[var(--color-border)] bg-white p-5">
