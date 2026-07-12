@@ -83,3 +83,6 @@ src/
 PDF export, email reminders for expiring licenses, document management,
 dark mode. CSV export, search/filter/sort, and all mandatory deliverables
 are implemented.
+
+## Bonus Features aside the mentioned in the brief
+- PDF Export
