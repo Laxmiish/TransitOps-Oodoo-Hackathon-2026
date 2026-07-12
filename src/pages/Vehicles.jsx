@@ -7,12 +7,16 @@ import Alert from '../components/common/Alert';
 import { Field, Input, Select, Button } from '../components/common/Field';
 import { VEHICLE_STATUSES } from '../services/businessRules';
 
+const VEHICLE_TYPES = ['Van', 'Truck', 'Pickup', 'Mini Truck'];
+
 const EMPTY_FORM = { regNo: '', name: '', type: 'Van', maxLoadKg: '', odometer: '', acquisitionCost: '', status: 'Available', region: 'North' };
 
 export default function Vehicles() {
   const [vehicles, setVehicles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [typeFilter, setTypeFilter] = useState('All');
+  const [statusFilter, setStatusFilter] = useState('All');
   const [modalOpen, setModalOpen] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [form, setForm] = useState(EMPTY_FORM);
@@ -26,8 +30,12 @@ export default function Vehicles() {
   useEffect(() => { refresh(); }, []);
 
   const filtered = useMemo(
-    () => vehicles.filter((v) => `${v.regNo} ${v.name}`.toLowerCase().includes(search.toLowerCase())),
-    [vehicles, search]
+    () => vehicles.filter((v) =>
+      `${v.regNo} ${v.name}`.toLowerCase().includes(search.toLowerCase()) &&
+      (typeFilter === 'All' || v.type === typeFilter) &&
+      (statusFilter === 'All' || v.status === statusFilter)
+    ),
+    [vehicles, search, typeFilter, statusFilter]
   );
 
   function openCreate() {
@@ -71,12 +79,22 @@ export default function Vehicles() {
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="relative w-full max-w-xs">
-          <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-          <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search reg no. or name…" className="pl-8" />
+        <div className="flex flex-wrap items-center gap-2">
+          <Select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)} className="w-36">
+            <option value="All">Type: All</option>
+            {VEHICLE_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+          </Select>
+          <Select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="w-36">
+            <option value="All">Status: All</option>
+            {VEHICLE_STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
+          </Select>
+          <div className="relative w-full max-w-xs">
+            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search reg no. or name…" className="pl-8" />
+          </div>
         </div>
         <Button variant="accent" onClick={openCreate}>
-          <Plus size={16} /> Register Vehicle
+          <Plus size={16} /> Add Vehicle
         </Button>
       </div>
 
@@ -84,13 +102,13 @@ export default function Vehicles() {
         <table className="w-full text-left text-sm">
           <thead>
             <tr className="border-b border-[var(--color-border)] text-xs uppercase tracking-wide text-[var(--color-text-muted)]">
-              <th className="px-4 py-3">Reg No.</th>
+              <th className="px-4 py-3">Reg. No / Vehicle</th>
               <th className="px-4 py-3">Name / Model</th>
               <th className="px-4 py-3">Type</th>
-              <th className="px-4 py-3">Max Load</th>
+              <th className="px-4 py-3">Capacity</th>
               <th className="px-4 py-3">Odometer</th>
+              <th className="px-4 py-3">Acq. Cost</th>
               <th className="px-4 py-3">Status</th>
-              <th className="px-4 py-3">Region</th>
               <th className="px-4 py-3 text-right">Actions</th>
             </tr>
           </thead>
@@ -102,8 +120,8 @@ export default function Vehicles() {
                 <td className="px-4 py-3">{v.type}</td>
                 <td className="px-4 py-3">{v.maxLoadKg} kg</td>
                 <td className="px-4 py-3 font-mono text-xs">{v.odometer?.toLocaleString()} km</td>
+                <td className="px-4 py-3">₹{Number(v.acquisitionCost).toLocaleString()}</td>
                 <td className="px-4 py-3"><StatusBadge status={v.status} /></td>
-                <td className="px-4 py-3">{v.region}</td>
                 <td className="px-4 py-3">
                   <div className="flex justify-end gap-1.5">
                     <button onClick={() => openEdit(v)} className="rounded-lg p-1.5 text-slate-500 hover:bg-slate-100 hover:text-[var(--color-ink)]">
@@ -122,6 +140,10 @@ export default function Vehicles() {
         {!loading && filtered.length === 0 && <p className="p-6 text-center text-sm text-[var(--color-text-muted)]">No vehicles match your search.</p>}
       </div>
 
+      <p className="text-xs text-[var(--color-danger)]">
+        Rule: Registration No. must be unique · Retired / In Shop vehicles are hidden from Trip Dispatching.
+      </p>
+
       <Modal open={modalOpen} onClose={() => setModalOpen(false)} title={editingId ? 'Edit Vehicle' : 'Register Vehicle'}>
         <form onSubmit={handleSubmit}>
           {error && <div className="mb-3"><Alert variant="error">{error}</Alert></div>}
@@ -134,7 +156,7 @@ export default function Vehicles() {
           <div className="grid grid-cols-2 gap-3">
             <Field label="Type" required>
               <Select value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })}>
-                {['Van', 'Truck', 'Pickup', 'Mini Truck'].map((t) => <option key={t}>{t}</option>)}
+                {VEHICLE_TYPES.map((t) => <option key={t}>{t}</option>)}
               </Select>
             </Field>
             <Field label="Region" required>

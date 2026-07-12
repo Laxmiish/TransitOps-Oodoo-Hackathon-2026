@@ -16,7 +16,7 @@ export default function Topbar({ title, onMenuClick }) {
   return (
     <header className="sticky top-0 z-20 flex items-center justify-between border-b border-[var(--color-border)] bg-[var(--color-surface-card)]/90 px-4 py-3 backdrop-blur lg:px-6">
       <div className="flex items-center gap-3">
-        <button onClick={onMenuClick} className="rounded-lg p-1.5 hover:bg-slate-100 lg:hidden">
+        <button onClick={onMenuClick} className="rounded-lg p-1.5 hover:bg-[var(--color-surface-muted)] lg:hidden">
           <Menu size={20} />
         </button>
         <h1 className="font-display text-lg font-semibold text-[var(--color-text-primary)]">{title}</h1>
@@ -28,17 +28,21 @@ export default function Topbar({ title, onMenuClick }) {
             className={`hidden items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium sm:flex ${
               mode === 'live'
                 ? 'bg-[var(--color-success-soft)] text-[var(--color-success)]'
-                : 'bg-[var(--color-warning-soft)] text-[var(--color-warning)]'
+                : 'bg-[var(--color-danger-soft)] text-[var(--color-danger)]'
             }`}
-            title={mode === 'live' ? 'Connected to backend API' : 'Backend unreachable — using local mock data'}
+            title={
+              mode === 'live'
+                ? 'Connected to backend API'
+                : 'Backend is not reachable — showing mock data'
+            }
           >
             {mode === 'live' ? <Wifi size={13} /> : <WifiOff size={13} />}
-            {mode === 'live' ? 'Live backend' : 'Offline mock data'}
+            {mode === 'live' ? 'Live backend' : 'Backend not reachable'}
           </span>
         )}
         <button
           onClick={logout}
-          className="flex items-center gap-1.5 rounded-lg border border-[var(--color-border)] px-3 py-1.5 text-sm font-medium text-[var(--color-text-primary)] hover:bg-slate-50"
+          className="flex items-center gap-1.5 rounded-lg border border-[var(--color-border)] px-3 py-1.5 text-sm font-medium text-[var(--color-text-primary)] hover:bg-[var(--color-surface-muted)]"
         >
           <LogOut size={15} />
           Logout

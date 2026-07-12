@@ -10,6 +10,7 @@ import Trips from './pages/Trips';
 import Maintenance from './pages/Maintenance';
 import FuelExpenses from './pages/FuelExpenses';
 import Reports from './pages/Reports';
+import Settings from './pages/Settings';
 
 export default function App() {
   return (
@@ -31,6 +32,7 @@ export default function App() {
             <Route path="/maintenance" element={<ProtectedRoute section="maintenance"><Maintenance /></ProtectedRoute>} />
             <Route path="/fuel-expenses" element={<ProtectedRoute section="fuel"><FuelExpenses /></ProtectedRoute>} />
             <Route path="/reports" element={<ProtectedRoute section="reports"><Reports /></ProtectedRoute>} />
+            <Route path="/settings" element={<ProtectedRoute section="settings"><Settings /></ProtectedRoute>} />
           </Route>
         </Routes>
       </BrowserRouter>

@@ -11,6 +11,7 @@ const TITLES = {
   '/maintenance': 'Maintenance',
   '/fuel-expenses': 'Fuel & Expense Management',
   '/reports': 'Reports & Analytics',
+  '/settings': 'Settings',
 };
 
 export default function AppLayout() {

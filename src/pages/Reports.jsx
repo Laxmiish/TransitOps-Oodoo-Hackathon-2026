@@ -21,6 +21,8 @@ function downloadCsv(filename, csv) {
   URL.revokeObjectURL(url);
 }
 
+const MONTH_LABELS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
 export default function Reports() {
   const [vehicles, setVehicles] = useState([]);
   const [trips, setTrips] = useState([]);
@@ -66,6 +68,42 @@ export default function Reports() {
     return active.length ? Math.round((onTrip.length / active.length) * 100) : 0;
   }, [vehicles]);
 
+  // Fleet-wide fuel efficiency (total distance / total fuel across all completed trips)
+  const avgFuelEfficiency = useMemo(() => {
+    const totalDistance = report.reduce((s, r) => s + r.totalDistance, 0);
+    const totalFuel = report.reduce((s, r) => s + r.totalFuelFromTrips, 0);
+    return totalFuel > 0 ? Number((totalDistance / totalFuel).toFixed(1)) : 0;
+  }, [report]);
+
+  const totalOperationalCost = useMemo(
+    () => report.reduce((s, r) => s + r.operationalCost, 0),
+    [report]
+  );
+
+  const avgRoi = useMemo(() => {
+    if (!report.length) return 0;
+    return Number((report.reduce((s, r) => s + r.roi, 0) / report.length).toFixed(1));
+  }, [report]);
+
+  // Revenue grouped by month, from completed trips with a date field
+  const monthlyRevenue = useMemo(() => {
+    const buckets = {};
+    trips.filter((t) => t.status === 'Completed' && t.date).forEach((t) => {
+      const monthIdx = new Date(t.date).getMonth();
+      const label = MONTH_LABELS[monthIdx];
+      buckets[label] = (buckets[label] || 0) + (t.revenue || 0);
+    });
+    return MONTH_LABELS.filter((m) => buckets[m] !== undefined).map((m) => ({ month: m, revenue: buckets[m] }));
+  }, [trips]);
+
+  // Top 3 costliest vehicles by operational cost
+  const topCostliest = useMemo(() => {
+    const sorted = [...report].sort((a, b) => b.operationalCost - a.operationalCost).slice(0, 3);
+    const max = sorted[0]?.operationalCost || 1;
+    const colors = ['bg-rose-400', 'bg-orange-400', 'bg-sky-400'];
+    return sorted.map((r, i) => ({ ...r, pct: Math.round((r.operationalCost / max) * 100), color: colors[i] || 'bg-slate-400' }));
+  }, [report]);
+
   function handleExport() {
     const headers = ['regNo', 'name', 'totalDistance', 'totalFuelFromTrips', 'fuelEfficiency', 'operationalCost', 'revenue', 'roi'];
     downloadCsv('transitops_reports.csv', toCsv(report, headers));
@@ -75,29 +113,72 @@ export default function Reports() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      {/* Stat cards */}
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+        <div className="rounded-xl border border-[var(--color-border)] bg-white px-4 py-3">
+          <p className="text-xs font-medium uppercase tracking-wide text-[var(--color-text-muted)]">Fuel Efficiency</p>
+          <p className="font-display text-2xl font-semibold">{avgFuelEfficiency} km/l</p>
+        </div>
         <div className="rounded-xl border border-[var(--color-border)] bg-white px-4 py-3">
           <p className="text-xs font-medium uppercase tracking-wide text-[var(--color-text-muted)]">Fleet Utilization</p>
           <p className="font-display text-2xl font-semibold">{fleetUtilization}%</p>
         </div>
+        <div className="rounded-xl border border-[var(--color-border)] bg-white px-4 py-3">
+          <p className="text-xs font-medium uppercase tracking-wide text-[var(--color-text-muted)]">Operational Cost</p>
+          <p className="font-display text-2xl font-semibold">₹{totalOperationalCost.toLocaleString()}</p>
+        </div>
+        <div className="rounded-xl border border-[var(--color-border)] bg-white px-4 py-3">
+          <p className="text-xs font-medium uppercase tracking-wide text-[var(--color-text-muted)]">Vehicle ROI</p>
+          <p className={`font-display text-2xl font-semibold ${avgRoi >= 0 ? 'text-[var(--color-success)]' : 'text-[var(--color-danger)]'}`}>{avgRoi}%</p>
+        </div>
+      </div>
+
+      <p className="text-xs text-[var(--color-text-muted)]">
+        ROI = (Revenue − (Maintenance + Fuel)) / Acquisition Cost
+      </p>
+
+      <div className="flex justify-end">
         <Button variant="accent" onClick={handleExport}>
           <Download size={16} /> Export CSV
         </Button>
       </div>
 
-      <div className="rounded-2xl border border-[var(--color-border)] bg-white p-5">
-        <p className="mb-3 font-display text-sm font-semibold">Vehicle ROI (%)</p>
-        <ResponsiveContainer width="100%" height={280}>
-          <BarChart data={report}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#E2E6EF" />
-            <XAxis dataKey="regNo" tick={{ fontSize: 11 }} />
-            <YAxis tick={{ fontSize: 11 }} />
-            <Tooltip />
-            <Bar dataKey="roi" fill="#F2A93B" radius={[4, 4, 0, 0]} />
-          </BarChart>
-        </ResponsiveContainer>
+      {/* Monthly Revenue + Top Costliest Vehicles */}
+      <div className="grid gap-6 md:grid-cols-2">
+        <div className="rounded-2xl border border-[var(--color-border)] bg-white p-5">
+          <p className="mb-3 font-display text-sm font-semibold">Monthly Revenue</p>
+          <ResponsiveContainer width="100%" height={220}>
+            <BarChart data={monthlyRevenue}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#E2E6EF" />
+              <XAxis dataKey="month" tick={{ fontSize: 11 }} />
+              <YAxis tick={{ fontSize: 11 }} />
+              <Tooltip />
+              <Bar dataKey="revenue" fill="#6C9BEF" radius={[4, 4, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+          {monthlyRevenue.length === 0 && <p className="text-center text-xs text-[var(--color-text-muted)]">No dated trip revenue yet.</p>}
+        </div>
+
+        <div className="rounded-2xl border border-[var(--color-border)] bg-white p-5">
+          <p className="mb-4 font-display text-sm font-semibold">Top Costliest Vehicles</p>
+          <div className="space-y-4">
+            {topCostliest.map((r) => (
+              <div key={r.regNo}>
+                <div className="mb-1 flex items-center justify-between text-xs">
+                  <span className="font-mono font-medium">{r.regNo}</span>
+                  <span className="text-[var(--color-text-muted)]">₹{r.operationalCost.toLocaleString()}</span>
+                </div>
+                <div className="h-2.5 w-full overflow-hidden rounded-full bg-slate-100">
+                  <div className={`h-full rounded-full ${r.color}`} style={{ width: `${r.pct}%` }} />
+                </div>
+              </div>
+            ))}
+            {topCostliest.length === 0 && <p className="text-xs text-[var(--color-text-muted)]">No cost data yet.</p>}
+          </div>
+        </div>
       </div>
 
+      {/* Detailed per-vehicle table */}
       <div className="overflow-x-auto rounded-2xl border border-[var(--color-border)] bg-white">
         <table className="w-full text-left text-sm">
           <thead>

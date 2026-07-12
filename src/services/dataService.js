@@ -1,8 +1,7 @@
 import api from './api';
 import * as mock from './mockService';
 
-// Tiny event bus so the UI can show a "using offline data" indicator
-// without prop-drilling connection state everywhere.
+// Tiny event bus so the UI can show connection state without prop-drilling.
 export const connectionEvents = new EventTarget();
 let mode = 'unknown'; // 'live' | 'mock' | 'unknown'
 
@@ -22,14 +21,15 @@ async function withFallback(apiCall, mockCall) {
     setMode('live');
     return result;
   } catch (err) {
-    // Network error / timeout / backend not implemented yet -> use mock.
-    // A real validation error from a *reachable* backend (4xx with response)
-    // should still surface to the user rather than silently falling back.
+    // A real validation error from a *reachable* backend (4xx) should still
+    // surface to the user instead of silently falling back to mock data.
     const isReachableButRejected = err?.response && err.response.status < 500;
     if (isReachableButRejected) {
       setMode('live');
       throw new Error(err.response.data?.message || 'Request was rejected by the server.');
     }
+    // Network error / timeout / backend down -> backend is not reachable.
+    // Show mock data so the UI keeps working, but flag the connection state.
     setMode('mock');
     return mockCall();
   }

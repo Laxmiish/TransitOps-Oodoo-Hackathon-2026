@@ -1,6 +1,6 @@
 import { NavLink } from 'react-router-dom';
 import {
-  LayoutDashboard, Truck, Users, Route, Wrench, Fuel, BarChart3, Waypoints,
+  LayoutDashboard, Truck, Users, Route, Wrench, Fuel, BarChart3, Waypoints, Settings as SettingsIcon,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
@@ -12,6 +12,7 @@ const NAV_ITEMS = [
   { key: 'maintenance', to: '/maintenance', label: 'Maintenance', icon: Wrench },
   { key: 'fuel', to: '/fuel-expenses', label: 'Fuel & Expenses', icon: Fuel },
   { key: 'reports', to: '/reports', label: 'Reports', icon: BarChart3 },
+  { key: 'settings', to: '/settings', label: 'Settings', icon: SettingsIcon },
 ];
 
 export default function Sidebar({ mobileOpen, onCloseMobile }) {

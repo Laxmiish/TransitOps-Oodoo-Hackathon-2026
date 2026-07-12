@@ -12,10 +12,11 @@ export const ROLES = {
   FINANCIAL_ANALYST: 'Financial Analyst',
 };
 
-// Which nav sections each role can see. Fleet Manager sees everything;
-// others get a focused subset per the spec's "Target Users" section.
+// Which nav sections each role can see. Fleet Manager sees everything,
+// including Settings (depot config + RBAC). Others get a focused subset
+// per the spec's "Target Users" section.
 export const ROLE_PERMISSIONS = {
-  [ROLES.FLEET_MANAGER]: ['dashboard', 'vehicles', 'drivers', 'trips', 'maintenance', 'fuel', 'reports'],
+  [ROLES.FLEET_MANAGER]: ['dashboard', 'vehicles', 'drivers', 'trips', 'maintenance', 'fuel', 'reports', 'settings'],
   [ROLES.DRIVER]: ['dashboard', 'trips'],
   [ROLES.SAFETY_OFFICER]: ['dashboard', 'drivers', 'reports'],
   [ROLES.FINANCIAL_ANALYST]: ['dashboard', 'fuel', 'reports'],

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Plus, Fuel as FuelIcon, Receipt } from 'lucide-react';
+import { Fuel as FuelIcon, Receipt } from 'lucide-react';
 import {
   getVehicles, getFuelLogs, getExpenses, getMaintenance, createFuelLog, createExpense,
 } from '../services/dataService';
@@ -33,14 +33,14 @@ export default function FuelExpenses() {
   }
   useEffect(() => { refresh(); }, []);
 
-  const perVehicleCost = useMemo(() => {
-    return vehicles.map((v) => {
-      const fuelCost = fuelLogs.filter((f) => f.vehicleId === v.id).reduce((s, f) => s + f.cost, 0);
-      const maintCost = maintenance.filter((m) => m.vehicleId === v.id).reduce((s, m) => s + m.cost, 0);
-      const otherExpense = expenses.filter((e) => e.vehicleId === v.id).reduce((s, e) => s + e.amount, 0);
-      return { vehicle: v, fuelCost, maintCost, otherExpense, total: fuelCost + maintCost + otherExpense };
-    });
-  }, [vehicles, fuelLogs, maintenance, expenses]);
+  const vehicleReg = (id) => vehicles.find((v) => v.id === id)?.regNo || '—';
+
+  const totalOperationalCost = useMemo(() => {
+    const fuelTotal = fuelLogs.reduce((s, f) => s + Number(f.cost), 0);
+    const maintTotal = maintenance.reduce((s, m) => s + Number(m.cost), 0);
+    const expenseTotal = expenses.reduce((s, e) => s + Number(e.amount), 0);
+    return fuelTotal + maintTotal + expenseTotal;
+  }, [fuelLogs, maintenance, expenses]);
 
   async function handleFuelSubmit(e) {
     e.preventDefault();
@@ -68,72 +68,91 @@ export default function FuelExpenses() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap justify-end gap-2">
-        <Button variant="ghost" onClick={() => { setFuelForm(EMPTY_FUEL); setFuelError(''); setFuelModalOpen(true); }}>
-          <FuelIcon size={16} /> Log Fuel
-        </Button>
-        <Button variant="accent" onClick={() => { setExpenseForm(EMPTY_EXPENSE); setExpenseError(''); setExpenseModalOpen(true); }}>
-          <Receipt size={16} /> Log Expense
-        </Button>
-      </div>
+      {/* Fuel Logs */}
+      <div className="space-y-3">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h2 className="text-xs font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">
+            Fuel Logs
+          </h2>
+          <div className="flex gap-2">
+            <Button variant="accent" onClick={() => { setFuelForm(EMPTY_FUEL); setFuelError(''); setFuelModalOpen(true); }}>
+              <FuelIcon size={16} /> Log Fuel
+            </Button>
+            <Button variant="accent" onClick={() => { setExpenseForm(EMPTY_EXPENSE); setExpenseError(''); setExpenseModalOpen(true); }}>
+              <Receipt size={16} /> Add Expense
+            </Button>
+          </div>
+        </div>
 
-      <div className="overflow-x-auto rounded-2xl border border-[var(--color-border)] bg-white">
-        <table className="w-full text-left text-sm">
-          <thead>
-            <tr className="border-b border-[var(--color-border)] text-xs uppercase tracking-wide text-[var(--color-text-muted)]">
-              <th className="px-4 py-3">Vehicle</th>
-              <th className="px-4 py-3">Fuel Cost</th>
-              <th className="px-4 py-3">Maintenance Cost</th>
-              <th className="px-4 py-3">Other Expenses</th>
-              <th className="px-4 py-3">Total Operational Cost</th>
-            </tr>
-          </thead>
-          <tbody>
-            {!loading && perVehicleCost.map(({ vehicle, fuelCost, maintCost, otherExpense, total }) => (
-              <tr key={vehicle.id} className="border-b border-[var(--color-border)] last:border-0 hover:bg-slate-50">
-                <td className="px-4 py-3 font-mono text-xs">{vehicle.regNo}</td>
-                <td className="px-4 py-3">₹{fuelCost.toLocaleString()}</td>
-                <td className="px-4 py-3">₹{maintCost.toLocaleString()}</td>
-                <td className="px-4 py-3">₹{otherExpense.toLocaleString()}</td>
-                <td className="px-4 py-3 font-semibold">₹{total.toLocaleString()}</td>
+        <div className="overflow-x-auto rounded-2xl border border-[var(--color-border)] bg-white">
+          <table className="w-full text-left text-sm">
+            <thead>
+              <tr className="border-b border-[var(--color-border)] text-xs uppercase tracking-wide text-[var(--color-text-muted)]">
+                <th className="px-4 py-3">Vehicle</th>
+                <th className="px-4 py-3">Date</th>
+                <th className="px-4 py-3">Liters</th>
+                <th className="px-4 py-3">Cost</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-        {loading && <p className="p-6 text-center text-sm text-[var(--color-text-muted)]">Loading costs…</p>}
-      </div>
-
-      <div className="grid gap-6 md:grid-cols-2">
-        <div className="rounded-2xl border border-[var(--color-border)] bg-white p-5">
-          <p className="mb-3 font-display text-sm font-semibold">Recent Fuel Logs</p>
-          <div className="space-y-2 text-sm">
-            {fuelLogs.slice().reverse().map((f) => (
-              <div key={f.id} className="flex items-center justify-between border-b border-[var(--color-border)] pb-2 last:border-0">
-                <span className="font-mono text-xs">{vehicles.find((v) => v.id === f.vehicleId)?.regNo}</span>
-                <span>{f.liters} L</span>
-                <span>₹{f.cost}</span>
-                <span className="text-xs text-[var(--color-text-muted)]">{f.date}</span>
-              </div>
-            ))}
-            {fuelLogs.length === 0 && <p className="text-xs text-[var(--color-text-muted)]">No fuel logs yet.</p>}
-          </div>
-        </div>
-        <div className="rounded-2xl border border-[var(--color-border)] bg-white p-5">
-          <p className="mb-3 font-display text-sm font-semibold">Recent Expenses</p>
-          <div className="space-y-2 text-sm">
-            {expenses.slice().reverse().map((e) => (
-              <div key={e.id} className="flex items-center justify-between border-b border-[var(--color-border)] pb-2 last:border-0">
-                <span className="font-mono text-xs">{vehicles.find((v) => v.id === e.vehicleId)?.regNo}</span>
-                <span>{e.category}</span>
-                <span>₹{e.amount}</span>
-                <span className="text-xs text-[var(--color-text-muted)]">{e.date}</span>
-              </div>
-            ))}
-            {expenses.length === 0 && <p className="text-xs text-[var(--color-text-muted)]">No expenses yet.</p>}
-          </div>
+            </thead>
+            <tbody>
+              {!loading && fuelLogs.slice().reverse().map((f) => (
+                <tr key={f.id} className="border-b border-[var(--color-border)] last:border-0 hover:bg-slate-50">
+                  <td className="px-4 py-3 font-mono text-xs">{vehicleReg(f.vehicleId)}</td>
+                  <td className="px-4 py-3">{f.date}</td>
+                  <td className="px-4 py-3">{f.liters} L</td>
+                  <td className="px-4 py-3">₹{Number(f.cost).toLocaleString()}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          {loading && <p className="p-6 text-center text-sm text-[var(--color-text-muted)]">Loading fuel logs…</p>}
+          {!loading && fuelLogs.length === 0 && <p className="p-6 text-center text-sm text-[var(--color-text-muted)]">No fuel logs yet.</p>}
         </div>
       </div>
 
+      {/* Other Expenses */}
+      <div className="space-y-3">
+        <h2 className="text-xs font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">
+          Other Expenses (Toll / Misc)
+        </h2>
+
+        <div className="overflow-x-auto rounded-2xl border border-[var(--color-border)] bg-white">
+          <table className="w-full text-left text-sm">
+            <thead>
+              <tr className="border-b border-[var(--color-border)] text-xs uppercase tracking-wide text-[var(--color-text-muted)]">
+                <th className="px-4 py-3">Vehicle</th>
+                <th className="px-4 py-3">Category</th>
+                <th className="px-4 py-3">Amount</th>
+                <th className="px-4 py-3">Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              {!loading && expenses.slice().reverse().map((e) => (
+                <tr key={e.id} className="border-b border-[var(--color-border)] last:border-0 hover:bg-slate-50">
+                  <td className="px-4 py-3 font-mono text-xs">{vehicleReg(e.vehicleId)}</td>
+                  <td className="px-4 py-3">{e.category}</td>
+                  <td className="px-4 py-3">₹{Number(e.amount).toLocaleString()}</td>
+                  <td className="px-4 py-3">{e.date}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          {loading && <p className="p-6 text-center text-sm text-[var(--color-text-muted)]">Loading expenses…</p>}
+          {!loading && expenses.length === 0 && <p className="p-6 text-center text-sm text-[var(--color-text-muted)]">No expenses yet.</p>}
+        </div>
+      </div>
+
+      {/* Total operational cost */}
+      <div className="flex items-center justify-between rounded-2xl border border-[var(--color-border)] bg-white px-4 py-3">
+        <span className="text-xs font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">
+          Total Operational Cost (Auto) = Fuel + Maint + Other
+        </span>
+        <span className="font-display text-lg font-semibold text-[var(--color-accent)]">
+          ₹{totalOperationalCost.toLocaleString()}
+        </span>
+      </div>
+
+      {/* Log Fuel modal */}
       <Modal open={fuelModalOpen} onClose={() => setFuelModalOpen(false)} title="Log Fuel">
         <form onSubmit={handleFuelSubmit}>
           {fuelError && <div className="mb-3"><Alert variant="error">{fuelError}</Alert></div>}
@@ -161,6 +180,7 @@ export default function FuelExpenses() {
         </form>
       </Modal>
 
+      {/* Log Expense modal */}
       <Modal open={expenseModalOpen} onClose={() => setExpenseModalOpen(false)} title="Log Expense">
         <form onSubmit={handleExpenseSubmit}>
           {expenseError && <div className="mb-3"><Alert variant="error">{expenseError}</Alert></div>}
