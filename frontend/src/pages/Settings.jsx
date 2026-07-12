@@ -77,7 +77,7 @@ export default function Settings() {
           Role-Based Access (RBAC)
         </h2>
 
-        <div className="overflow-x-auto rounded-2xl border border-[var(--color-border)] bg-white">
+        <div className="overflow-x-auto rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface-card)]">
           <table className="w-full text-left text-sm">
             <thead>
               <tr className="border-b border-[var(--color-border)] text-xs uppercase tracking-wide text-[var(--color-text-muted)]">
@@ -91,7 +91,7 @@ export default function Settings() {
             </thead>
             <tbody>
               {ROLES.map((r) => (
-                <tr key={r.role} className="border-b border-[var(--color-border)] last:border-0 hover:bg-slate-50">
+                <tr key={r.role} className="border-b border-[var(--color-border)] last:border-0 hover:bg-[var(--color-surface-muted)]">
                   <td className="px-4 py-3 font-medium">{r.role}</td>
                   <td className="px-4 py-3"><AccessMark level={r.fleet} /></td>
                   <td className="px-4 py-3"><AccessMark level={r.drivers} /></td>

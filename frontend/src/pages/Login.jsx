@@ -89,7 +89,7 @@ export default function Login() {
 
           <form onSubmit={handleSubmit} className="mt-6">
             {error && (
-              <div className="mb-4 flex items-start gap-2 rounded-lg border border-red-200 bg-[var(--color-danger-soft)] px-3 py-2 text-sm text-[var(--color-danger)]">
+              <div className="mb-4 flex items-start gap-2 rounded-lg border border-[var(--color-danger)] bg-[var(--color-danger-soft)] px-3 py-2 text-sm text-[var(--color-danger)]">
                 <AlertTriangle size={16} className="mt-0.5 shrink-0" />
                 {error}
               </div>
@@ -105,7 +105,7 @@ export default function Login() {
             </Button>
           </form>
 
-          <div className="mt-8 rounded-xl border border-[var(--color-border)] bg-white p-4">
+          <div className="mt-8 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-card)] p-4">
             <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">Demo accounts · password123</p>
             <div className="grid grid-cols-2 gap-2 text-xs">
               {DEMO_ACCOUNTS.map((acc) => (

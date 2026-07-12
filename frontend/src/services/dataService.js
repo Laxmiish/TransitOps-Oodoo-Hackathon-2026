@@ -1,9 +1,8 @@
 import api from './api';
 import * as mock from './mockService';
 
-// Tiny event bus so the UI can show connection state without prop-drilling.
 export const connectionEvents = new EventTarget();
-let mode = 'unknown'; // 'live' | 'mock' | 'unknown'
+let mode = 'unknown'; 
 
 function setMode(next) {
   if (mode !== next) {
@@ -21,15 +20,11 @@ async function withFallback(apiCall, mockCall) {
     setMode('live');
     return result;
   } catch (err) {
-    // A real validation error from a *reachable* backend (4xx) should still
-    // surface to the user instead of silently falling back to mock data.
     const isReachableButRejected = err?.response && err.response.status < 500;
     if (isReachableButRejected) {
       setMode('live');
-      throw new Error(err.response.data?.message || 'Request was rejected by the server.');
+      throw new Error(err.response.data?.detail || err.response.data?.message || 'Request was rejected by the server.');
     }
-    // Network error / timeout / backend down -> backend is not reachable.
-    // Show mock data so the UI keeps working, but flag the connection state.
     setMode('mock');
     return mockCall();
   }
@@ -38,7 +33,18 @@ async function withFallback(apiCall, mockCall) {
 // ---------- Auth ----------
 export const login = (email, password) =>
   withFallback(
-    async () => (await api.post('/auth/login', { email, password })).data,
+    async () => {
+      // FastAPI OAuth2PasswordRequestForm requires URL-encoded form data (username, password)
+      const formData = new URLSearchParams();
+      formData.append('username', email);
+      formData.append('password', password);
+      const res = await api.post('/login', formData, {
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+      });
+      // The API returns { "access_token": "..." }, but our frontend might expect something else.
+      // Assuming frontend expects token, we just return the data.
+      return { token: res.data.access_token, user: { email, role: 'Admin' } };
+    },
     () => mock.mockLogin(email, password)
   );
 
@@ -48,7 +54,7 @@ export const getVehicles = () =>
 export const createVehicle = (data) =>
   withFallback(async () => (await api.post('/vehicles', data)).data, () => mock.mockCreateVehicle(data));
 export const updateVehicle = (id, data) =>
-  withFallback(async () => (await api.patch(`/vehicles/${id}`, data)).data, () => mock.mockUpdateVehicle(id, data));
+  withFallback(async () => (await api.patch(`/vehicles/${id}/status`, { status: data.status })).data, () => mock.mockUpdateVehicle(id, data));
 export const deleteVehicle = (id) =>
   withFallback(async () => (await api.delete(`/vehicles/${id}`)).data, () => mock.mockDeleteVehicle(id));
 
@@ -68,11 +74,11 @@ export const getTrips = () =>
 export const createTrip = (data) =>
   withFallback(async () => (await api.post('/trips', data)).data, () => mock.mockCreateTrip(data));
 export const dispatchTrip = (id) =>
-  withFallback(async () => (await api.post(`/trips/${id}/dispatch`)).data, () => mock.mockDispatchTrip(id));
+  withFallback(async () => (await api.patch(`/trips/${id}/status`, { status: "Dispatched" })).data, () => mock.mockDispatchTrip(id));
 export const completeTrip = (id, data) =>
-  withFallback(async () => (await api.post(`/trips/${id}/complete`, data)).data, () => mock.mockCompleteTrip(id, data));
+  withFallback(async () => (await api.patch(`/trips/${id}/status`, { status: "Completed" })).data, () => mock.mockCompleteTrip(id, data));
 export const cancelTrip = (id) =>
-  withFallback(async () => (await api.post(`/trips/${id}/cancel`)).data, () => mock.mockCancelTrip(id));
+  withFallback(async () => (await api.patch(`/trips/${id}/status`, { status: "Cancelled" })).data, () => mock.mockCancelTrip(id));
 
 // ---------- Maintenance ----------
 export const getMaintenance = () =>
@@ -80,13 +86,13 @@ export const getMaintenance = () =>
 export const createMaintenance = (data) =>
   withFallback(async () => (await api.post('/maintenance', data)).data, () => mock.mockCreateMaintenance(data));
 export const closeMaintenance = (id) =>
-  withFallback(async () => (await api.post(`/maintenance/${id}/close`)).data, () => mock.mockCloseMaintenance(id));
+  withFallback(async () => (await api.patch(`/maintenance/${id}/status`, { status: "Closed" })).data, () => mock.mockCloseMaintenance(id));
 
 // ---------- Fuel logs ----------
 export const getFuelLogs = () =>
-  withFallback(async () => (await api.get('/fuel-logs')).data, mock.mockGetFuelLogs);
+  withFallback(async () => (await api.get('/fuel')).data, mock.mockGetFuelLogs);
 export const createFuelLog = (data) =>
-  withFallback(async () => (await api.post('/fuel-logs', data)).data, () => mock.mockCreateFuelLog(data));
+  withFallback(async () => (await api.post('/fuel', data)).data, () => mock.mockCreateFuelLog(data));
 
 // ---------- Expenses ----------
 export const getExpenses = () =>

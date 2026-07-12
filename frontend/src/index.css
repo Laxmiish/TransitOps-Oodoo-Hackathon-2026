@@ -33,6 +33,24 @@
   --color-border: #E2E6EF;
 }
 
+/* Dark Theme Overrides */
+.dark {
+  --color-surface: #0B1220;
+  --color-surface-card: #141F35;
+  --color-surface-muted: #1D2B47;
+
+  --color-text-primary: #F3F5F9;
+  --color-text-muted: #94A3B8;
+  --color-text-onink: #E2E8F0;
+
+  --color-border: #1E293B;
+
+  --color-success-soft: rgba(23, 138, 76, 0.2);
+  --color-danger-soft: rgba(211, 59, 59, 0.2);
+  --color-warning-soft: rgba(224, 149, 46, 0.2);
+  --color-info-soft: rgba(46, 111, 224, 0.2);
+}
+
 html,
 body,
 #root {
@@ -43,6 +61,9 @@ body {
   background-color: var(--color-surface);
   color: var(--color-text-primary);
   font-family: var(--font-sans);
+  margin: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 ::-webkit-scrollbar {
@@ -57,6 +78,9 @@ body {
 ::-webkit-scrollbar-thumb {
   background: #cbd3e0;
   border-radius: 8px;
+}
+.dark ::-webkit-scrollbar-thumb {
+  background: #334155;
 }
 
 .font-display {
@@ -92,11 +116,9 @@ body {
   100% {
     opacity: 1;
   }
-
   94% {
     opacity: 0.55;
   }
-
   96% {
     opacity: 0.9;
   }

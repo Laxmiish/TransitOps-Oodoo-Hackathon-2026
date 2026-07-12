@@ -1,8 +1,7 @@
 import axios from 'axios';
 
-// Point this at your own backend. Falls back to local mock data
-// automatically (see dataService.js) if the backend is unreachable.
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+// Pointing to our FastAPI backend!
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
 
 export const api = axios.create({
   baseURL: BASE_URL,
@@ -10,7 +9,8 @@ export const api = axios.create({
 });
 
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('transitops_token');
+  // Use the standard 'token' key since that's what we are setting in Login
+  const token = localStorage.getItem('token') || localStorage.getItem('transitops_token');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
