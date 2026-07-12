@@ -30,6 +30,14 @@ async function withFallback(apiCall, mockCall) {
   }
 }
 
+function parseJwt(token) {
+  try {
+    return JSON.parse(atob(token.split('.')[1]));
+  } catch (e) {
+    return null;
+  }
+}
+
 // ---------- Auth ----------
 export const login = (email, password) =>
   withFallback(
@@ -41,9 +49,10 @@ export const login = (email, password) =>
       const res = await api.post('/login', formData, {
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
       });
-      // The API returns { "access_token": "..." }, but our frontend might expect something else.
-      // Assuming frontend expects token, we just return the data.
-      return { token: res.data.access_token, user: { email, role: 'Admin' } };
+      const token = res.data.access_token;
+      const decoded = parseJwt(token);
+      const role = decoded?.role || 'Driver'; 
+      return { token, user: { name: email.split('@')[0], email, role } };
     },
     () => mock.mockLogin(email, password)
   );

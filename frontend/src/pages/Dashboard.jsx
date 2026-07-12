@@ -58,6 +58,7 @@ export default function Dashboard() {
   const [drivers, setDrivers] = useState([]);
   const [trips, setTrips] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const [typeFilter, setTypeFilter] = useState('All');
   const [statusFilter, setStatusFilter] = useState('All');
@@ -65,11 +66,16 @@ export default function Dashboard() {
 
   useEffect(() => {
     (async () => {
-      const [v, d, t] = await Promise.all([getVehicles(), getDrivers(), getTrips()]);
-      setVehicles(v);
-      setDrivers(d);
-      setTrips(t);
-      setLoading(false);
+      try {
+        const [v, d, t] = await Promise.all([getVehicles(), getDrivers(), getTrips()]);
+        setVehicles(v);
+        setDrivers(d);
+        setTrips(t);
+      } catch (err) {
+        setError(err.message || 'Failed to load dashboard data. Please try logging in again.');
+      } finally {
+        setLoading(false);
+      }
     })();
   }, []);
 
@@ -123,6 +129,7 @@ export default function Dashboard() {
   }, [trips, vehicles, drivers]);
 
   if (loading) return <p className="text-sm text-[var(--color-text-muted)]">Loading dashboard…</p>;
+  if (error) return <p className="text-sm text-[var(--color-danger)] bg-[var(--color-danger-soft)] p-4 rounded-lg">{error}</p>;
 
   return (
     <div className="space-y-5">
