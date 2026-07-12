@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { Field, Input, Button } from '../components/common/Field';
 
 const DEMO_ACCOUNTS = [
+  { role: 'Admin', email: 'admin@transitops.io' },
   { role: 'Fleet Manager', email: 'fleet.manager@transitops.io' },
   { role: 'Driver', email: 'driver@transitops.io' },
   { role: 'Safety Officer', email: 'safety.officer@transitops.io' },

@@ -70,6 +70,43 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
     return {"access_token": access_token, "token_type": "bearer", "role": role}
 
 # ==========================================
+# Users (Admin only)
+# ==========================================
+@app.post("/users", response_model=schemas.User, status_code=status.HTTP_201_CREATED)
+def create_user(
+    user: schemas.UserCreate,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(require_roles(["Admin"]))
+):
+    # Check if user exists
+    existing = db.execute(
+        text("SELECT id FROM users WHERE email = :email"),
+        {"email": user.email}
+    ).fetchone()
+    if existing:
+        raise HTTPException(status_code=400, detail="Email already registered")
+
+    # Hash the password using argon2 (via cryptography.py)
+    hashed_pw = get_password_hash(user.password)
+
+    # Insert user
+    result = db.execute(
+        text("""
+            INSERT INTO users (name, email, password_hash, role_id)
+            VALUES (:name, :email, :password_hash, :role_id)
+            RETURNING id, name, email, role_id, created_at
+        """),
+        {
+            "name": user.name,
+            "email": user.email,
+            "password_hash": hashed_pw,
+            "role_id": user.role_id
+        }
+    )
+    db.commit()
+    return result.mappings().fetchone()
+
+# ==========================================
 # Vehicles
 # ==========================================
 @app.get("/vehicles", response_model=List[schemas.Vehicle])

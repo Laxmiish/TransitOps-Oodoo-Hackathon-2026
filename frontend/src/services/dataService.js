@@ -253,6 +253,12 @@ export const login = (email, password) =>
     () => mock.mockLogin(email, password)
   );
 
+export const createUser = (data) =>
+  withFallback(
+    async () => (await api.post('/users', data)).data,
+    () => { throw new Error("Mock user creation not supported"); }
+  );
+
 // ==========================================
 // Vehicles
 // ==========================================
