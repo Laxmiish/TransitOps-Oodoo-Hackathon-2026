@@ -17,4 +17,17 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response && error.response.status === 401) {
+      // Auto-logout if token is invalid or expired
+      localStorage.removeItem('token');
+      localStorage.removeItem('transitops_token');
+      window.location.href = '/'; // Kick back to login
+    }
+    return Promise.reject(error);
+  }
+);
+
 export default api;
