@@ -1,3 +1,92 @@
+<<<<<<< HEAD
+@import "tailwindcss";
+
+@theme {
+  --font-display: "Space Grotesk", "Inter", sans-serif;
+  --font-sans: "Inter", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+  --color-ink: #0B1220;
+  --color-ink-2: #141F35;
+  --color-ink-3: #1D2B47;
+
+  --color-surface: #F3F5F9;
+  --color-surface-card: #FFFFFF;
+  --color-surface-muted: #E7EBF2;
+
+  --color-accent: #F2A93B;
+  --color-accent-dark: #D88C1F;
+  --color-transit: #1FA9B8;
+
+  --color-success: #178A4C;
+  --color-success-soft: #E4F5EC;
+  --color-danger: #D33B3B;
+  --color-danger-soft: #FBE7E7;
+  --color-warning: #E0952E;
+  --color-warning-soft: #FCF0DE;
+  --color-info: #2E6FE0;
+  --color-info-soft: #E7EEFD;
+
+  --color-text-primary: #10182B;
+  --color-text-muted: #64748B;
+  --color-text-onink: #C7D0E0;
+
+  --color-border: #E2E6EF;
+}
+
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  background-color: var(--color-surface);
+  color: var(--color-text-primary);
+  font-family: var(--font-sans);
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd3e0;
+  border-radius: 8px;
+}
+
+.font-display {
+  font-family: var(--font-display);
+}
+.font-mono {
+  font-family: var(--font-mono);
+}
+
+/* Departure-board signature component */
+.board-panel {
+  background: linear-gradient(180deg, var(--color-ink) 0%, #0A0F1C 100%);
+  border: 1px solid #223052;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
+}
+.board-row {
+  border-bottom: 1px dashed rgba(199, 208, 224, 0.12);
+}
+.board-row:last-child {
+  border-bottom: none;
+}
+.board-flicker {
+  animation: flicker 3.2s ease-in-out infinite;
+}
+@keyframes flicker {
+  0%, 92%, 100% { opacity: 1; }
+  94% { opacity: 0.55; }
+  96% { opacity: 0.9; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .board-flicker { animation: none; }
+=======
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
@@ -10,4 +99,5 @@ body {
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
+>>>>>>> 67065a637c43d0eafa4538977df5dd2048c51f82
 }
