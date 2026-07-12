@@ -49,9 +49,9 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
     user = db.execute(
         text("SELECT id, email, password_hash, role_id FROM users WHERE email = :email"),
         {"email": form_data.username}
-    ).fetchone()
+    ).mappings().fetchone()
     
-    if not user or not verify_password(form_data.password, user.password_hash):
+    if not user or not verify_password(form_data.password, user["password_hash"]):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect email or password",
@@ -60,11 +60,11 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
         
     role = db.execute(
         text("SELECT name FROM roles WHERE id = :role_id"), 
-        {"role_id": user.role_id}
+        {"role_id": user["role_id"]}
     ).scalar()
 
     access_token = create_access_token(
-        data={"sub": user.email, "role": role, "user_id": user.id}
+        data={"sub": user["email"], "role": role, "user_id": user["id"]}
     )
     
     return {"access_token": access_token, "token_type": "bearer", "role": role}
