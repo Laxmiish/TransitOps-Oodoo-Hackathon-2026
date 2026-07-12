@@ -4,7 +4,7 @@ pydantic
 pydantic-settings
 python-dotenv
 sqlalchemy
-psycopg2-binary
+pg8000
 python-jose[cryptography]
 passlib[bcrypt]
 python-multipart
