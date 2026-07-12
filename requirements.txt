@@ -1,0 +1,27 @@
+# Setup Instructions:
+# 
+# 1. Create a virtual environment for the FastAPI backend:
+#    python -m venv venv
+# 
+# 2. Activate the virtual environment:
+#    - Windows: venv\Scripts\activate
+#    - Mac/Linux: source venv/bin/activate
+# 
+# 3. Install these backend requirements:
+#    pip install -r requirements.txt
+# 
+# 4. For the React app with Tailwind CSS (assuming a 'frontend' folder):
+#    npx create-react-app frontend
+#    cd frontend
+#    npm install -D tailwindcss postcss autoprefixer
+#    npx tailwindcss init -p
+# 
+# (Make sure to configure tailwind.config.js and your css files as per Tailwind's React setup guide)
+# 
+# --- Backend Requirements below ---
+
+fastapi
+uvicorn[standard]
+pydantic
+pydantic-settings
+python-dotenv
