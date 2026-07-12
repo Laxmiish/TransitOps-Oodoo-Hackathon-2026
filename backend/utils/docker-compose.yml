@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: transitops_db
+    environment:
+      POSTGRES_USER: transitops_user
+      POSTGRES_PASSWORD: transitops_password
+      POSTGRES_DB: transitops_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      # Mount the schema.sql file to initialize the database automatically on first run
+      - ./schema.sql:/docker-entrypoint-initdb.d/schema.sql
+
+volumes:
+  postgres_data:
