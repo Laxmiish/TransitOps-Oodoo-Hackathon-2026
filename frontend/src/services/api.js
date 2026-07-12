@@ -5,7 +5,7 @@ const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
 
 export const api = axios.create({
   baseURL: BASE_URL,
-  timeout: 4000,
+  timeout: 15000, // Increased to 15s to allow for Vercel serverless cold-starts
 });
 
 api.interceptors.request.use((config) => {
