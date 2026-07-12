@@ -10,6 +10,7 @@ export const ROLES = {
   DRIVER: 'Driver',
   SAFETY_OFFICER: 'Safety Officer',
   FINANCIAL_ANALYST: 'Financial Analyst',
+  ADMIN: 'Admin',
 };
 
 // Which nav sections each role can see. Fleet Manager sees everything,
@@ -55,6 +56,7 @@ export function AuthProvider({ children }) {
 
   function can(section) {
     if (!user) return false;
+    if (user.role === ROLES.ADMIN) return true; // Admin gets everything!
     const allowed = ROLE_PERMISSIONS[user.role] || [];
     return allowed.includes(section);
   }

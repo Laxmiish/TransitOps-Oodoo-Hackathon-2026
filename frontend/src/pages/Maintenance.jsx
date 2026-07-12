@@ -24,11 +24,14 @@ export default function Maintenance() {
   useEffect(() => { refresh(); }, []);
 
   const enriched = useMemo(
-    () => records.map((r) => ({ ...r, vehicleReg: vehicles.find((v) => v.id === r.vehicleId)?.regNo || '—' })),
+    () => records.map((r) => ({
+      ...r,
+      vehicleReg: vehicles.find((v) => String(v.id) === String(r.vehicleId))?.regNo || '—',
+    })),
     [records, vehicles]
   );
 
-  // Vehicles not already In Shop can be sent for maintenance; retired vehicles excluded.
+  // Vehicles not already Retired can be sent for maintenance
   const eligibleVehicles = useMemo(() => vehicles.filter((v) => v.status !== 'Retired'), [vehicles]);
 
   async function handleSubmit(e) {

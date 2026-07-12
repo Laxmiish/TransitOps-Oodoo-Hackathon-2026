@@ -40,23 +40,34 @@ export default function Reports() {
 
   const report = useMemo(() => {
     return vehicles.map((v) => {
-      const completedTrips = trips.filter((t) => t.vehicleId === v.id && t.status === 'Completed');
-      const totalDistance = completedTrips.reduce((s, t) => s + (t.plannedDistanceKm || 0), 0);
-      const totalFuelFromTrips = completedTrips.reduce((s, t) => s + (t.fuelConsumedL || 0), 0);
-      const fuelCost = fuelLogs.filter((f) => f.vehicleId === v.id).reduce((s, f) => s + f.cost, 0);
-      const maintCost = maintenance.filter((m) => m.vehicleId === v.id).reduce((s, m) => s + m.cost, 0);
+      const completedTrips = trips.filter(
+        (t) => String(t.vehicleId) === String(v.id) && t.status === 'Completed'
+      );
+      const totalDistance = completedTrips.reduce(
+        (s, t) => s + (t.actualDistanceKm || t.plannedDistanceKm || 0), 0
+      );
+      const totalFuelFromTrips = completedTrips.reduce(
+        (s, t) => s + (t.fuelConsumedL || 0), 0
+      );
+      const fuelCost = fuelLogs
+        .filter((f) => String(f.vehicleId) === String(v.id))
+        .reduce((s, f) => s + Number(f.cost), 0);
+      const maintCost = maintenance
+        .filter((m) => String(m.vehicleId) === String(v.id))
+        .reduce((s, m) => s + Number(m.cost), 0);
       const revenue = completedTrips.reduce((s, t) => s + (t.revenue || 0), 0);
       const fuelEfficiency = totalFuelFromTrips > 0 ? totalDistance / totalFuelFromTrips : 0;
       const operationalCost = fuelCost + maintCost;
-      const roi = v.acquisitionCost > 0 ? (revenue - operationalCost) / v.acquisitionCost : 0;
+      const acqCost = Number(v.acquisitionCost || v.acquisition_cost || 1);
+      const roi = acqCost > 0 ? (revenue - operationalCost) / acqCost : 0;
       return {
-        regNo: v.regNo,
+        regNo: v.regNo || v.registration_number,
         name: v.name,
-        totalDistance,
-        totalFuelFromTrips,
+        totalDistance: Math.round(totalDistance),
+        totalFuelFromTrips: Math.round(totalFuelFromTrips * 10) / 10,
         fuelEfficiency: Number(fuelEfficiency.toFixed(2)),
-        operationalCost,
-        revenue,
+        operationalCost: Math.round(operationalCost),
+        revenue: Math.round(revenue),
         roi: Number((roi * 100).toFixed(1)),
       };
     });

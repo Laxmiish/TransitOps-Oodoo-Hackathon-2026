@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Plus, Pencil, Trash2, Search, ShieldAlert } from 'lucide-react';
-import { getDrivers, createDriver, updateDriver, deleteDriver } from '../services/dataService';
+import { getDrivers, createDriver, updateDriver, deleteDriver, updateDriverStatus } from '../services/dataService';
 import Modal from '../components/common/Modal';
 import Alert from '../components/common/Alert';
 import { Field, Input, Select, Button } from '../components/common/Field';
@@ -88,7 +88,7 @@ export default function Drivers() {
     if (!selectedDriver) return;
     setToggleError('');
     try {
-      await updateDriver(selectedDriver.id, { ...selectedDriver, status });
+      await updateDriverStatus(selectedDriver.id, status);
       refresh();
     } catch (err) {
       setToggleError(err.message || 'Could not update status.');
@@ -124,7 +124,6 @@ export default function Drivers() {
           </thead>
           <tbody>
             {!loading && filtered.map((d) => {
-              const expired = isLicenseExpired(d);
               const isSelected = selectedId === d.id;
               return (
                 <tr
@@ -136,14 +135,14 @@ export default function Drivers() {
                 >
                   <td className="px-4 py-3 text-[var(--color-text-primary)]">{d.name}</td>
                   <td className="px-4 py-3 font-mono text-xs text-[var(--color-text-primary)]">{d.licenseNo}</td>
-                  <td className="px-4 py-3 text-[var(--color-text-primary)]">{d.licenseCategory}</td>
+                  <td className="px-4 py-3 text-[var(--color-text-primary)]">{d.licenseCategory || '—'}</td>
                   <td className="px-4 py-3">
-                    <span className={expired ? 'flex items-center gap-1 font-medium text-[var(--color-danger)]' : 'text-[var(--color-text-primary)]'}>
-                      {expired && <ShieldAlert size={13} />}
+                    <span className={isLicenseExpired(d) ? 'flex items-center gap-1 font-medium text-[var(--color-danger)]' : 'text-[var(--color-text-primary)]'}>
+                      {isLicenseExpired(d) && <ShieldAlert size={13} />}
                       {d.licenseExpiry}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-[var(--color-text-muted)]">{d.contact}</td>
+                  <td className="px-4 py-3 text-[var(--color-text-muted)]">{d.contact || '—'}</td>
                   <td className="px-4 py-3 text-[var(--color-text-primary)]">{d.tripCompletionRate ?? '—'}{d.tripCompletionRate != null ? '%' : ''}</td>
                   <td className="px-4 py-3 text-[var(--color-text-primary)]">{d.safetyScore}%</td>
                   <td className="px-4 py-3"><StatusPill status={d.status} /></td>

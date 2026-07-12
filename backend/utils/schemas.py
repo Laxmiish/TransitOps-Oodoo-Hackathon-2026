@@ -72,6 +72,8 @@ class TripBase(BaseModel):
     cargo_weight: float
     planned_distance: Optional[float] = None
     actual_distance: Optional[float] = None
+    fuel_consumed: Optional[float] = None
+    revenue: Optional[float] = 0.0
     status: Optional[str] = "Draft"
 
 class TripCreate(TripBase):
@@ -79,6 +81,9 @@ class TripCreate(TripBase):
 
 class TripStatusUpdate(BaseModel):
     status: str
+    actual_distance: Optional[float] = None
+    fuel_consumed: Optional[float] = None
+    revenue: Optional[float] = None
 
 class Trip(TripBase):
     id: int

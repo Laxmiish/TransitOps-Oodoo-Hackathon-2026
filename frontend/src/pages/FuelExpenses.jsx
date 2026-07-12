@@ -33,12 +33,12 @@ export default function FuelExpenses() {
   }
   useEffect(() => { refresh(); }, []);
 
-  const vehicleReg = (id) => vehicles.find((v) => v.id === id)?.regNo || '—';
+  const vehicleReg = (id) => vehicles.find((v) => String(v.id) === String(id))?.regNo || '—';
 
   const totalOperationalCost = useMemo(() => {
     const fuelTotal = fuelLogs.reduce((s, f) => s + Number(f.cost), 0);
     const maintTotal = maintenance.reduce((s, m) => s + Number(m.cost), 0);
-    const expenseTotal = expenses.reduce((s, e) => s + Number(e.amount), 0);
+    const expenseTotal = expenses.reduce((s, e) => s + Number(e.cost || e.amount || 0), 0);
     return fuelTotal + maintTotal + expenseTotal;
   }, [fuelLogs, maintenance, expenses]);
 

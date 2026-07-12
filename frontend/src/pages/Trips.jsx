@@ -9,7 +9,7 @@ import { Field, Input, Select, Button } from '../components/common/Field';
 import { isVehicleAssignable, isDriverAssignable } from '../services/businessRules';
 
 const EMPTY_FORM = { source: '', destination: '', vehicleId: '', driverId: '', cargoWeightKg: '', plannedDistanceKm: '' };
-const EMPTY_COMPLETE = { actualOdometer: '', fuelConsumedL: '', revenue: '' };
+const EMPTY_COMPLETE = { actualDistanceKm: '', fuelConsumedL: '', revenue: '' };
 
 const LIFECYCLE_STEPS = ['Draft', 'Dispatched', 'Completed', 'Cancelled'];
 const STEP_DOT = {
@@ -106,8 +106,8 @@ export default function Trips() {
       .sort((a, b) => (b.id > a.id ? 1 : -1))
       .map((t) => ({
         ...t,
-        vehicleReg: vehicles.find((v) => v.id === t.vehicleId)?.regNo || null,
-        driverName: drivers.find((d) => d.id === t.driverId)?.name || null,
+        vehicleReg: vehicles.find((v) => String(v.id) === String(t.vehicleId))?.regNo || null,
+        driverName: drivers.find((d) => String(d.id) === String(t.driverId))?.name || null,
       })),
     [trips, vehicles, drivers]
   );
@@ -158,7 +158,11 @@ export default function Trips() {
     e.preventDefault();
     setCompleteError('');
     try {
-      await completeTrip(completingTrip.id, completeForm);
+      await completeTrip(completingTrip.id, {
+        actualDistanceKm: completeForm.actualDistanceKm,
+        fuelConsumedL: completeForm.fuelConsumedL,
+        revenue: completeForm.revenue,
+      });
       setCompleteOpen(false);
       refresh();
     } catch (err) {
@@ -280,11 +284,11 @@ export default function Trips() {
       <Modal open={completeOpen} onClose={() => setCompleteOpen(false)} title={`Complete Trip — ${completingTrip?.source} → ${completingTrip?.destination}`}>
         <form onSubmit={handleComplete}>
           {completeError && <div className="mb-3"><Alert variant="error">{completeError}</Alert></div>}
-          <Field label="Final Odometer Reading (km)" required>
-            <Input type="number" min="0" required value={completeForm.actualOdometer} onChange={(e) => setCompleteForm({ ...completeForm, actualOdometer: e.target.value })} />
+          <Field label="Actual Distance Driven (km)" required>
+            <Input type="number" min="0" required value={completeForm.actualDistanceKm} onChange={(e) => setCompleteForm({ ...completeForm, actualDistanceKm: e.target.value })} placeholder="e.g. 245" />
           </Field>
           <Field label="Fuel Consumed (liters)" required>
-            <Input type="number" min="0" step="0.1" required value={completeForm.fuelConsumedL} onChange={(e) => setCompleteForm({ ...completeForm, fuelConsumedL: e.target.value })} />
+            <Input type="number" min="0" step="0.1" required value={completeForm.fuelConsumedL} onChange={(e) => setCompleteForm({ ...completeForm, fuelConsumedL: e.target.value })} placeholder="e.g. 32.5" />
           </Field>
           <Field label="Trip Revenue (₹)">
             <Input type="number" min="0" value={completeForm.revenue} onChange={(e) => setCompleteForm({ ...completeForm, revenue: e.target.value })} placeholder="Used for ROI reporting" />

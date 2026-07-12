@@ -102,7 +102,7 @@ export default function Vehicles() {
         <table className="w-full text-left text-sm">
           <thead>
             <tr className="border-b border-[var(--color-border)] text-xs uppercase tracking-wide text-[var(--color-text-muted)]">
-              <th className="px-4 py-3">Reg. No / Vehicle</th>
+              <th className="px-4 py-3">Reg. No</th>
               <th className="px-4 py-3">Name / Model</th>
               <th className="px-4 py-3">Type</th>
               <th className="px-4 py-3">Capacity</th>
@@ -116,11 +116,11 @@ export default function Vehicles() {
             {!loading && filtered.map((v) => (
               <tr key={v.id} className="border-b border-[var(--color-border)] last:border-0 hover:bg-slate-50">
                 <td className="px-4 py-3 font-mono text-xs">{v.regNo}</td>
-                <td className="px-4 py-3">{v.name}</td>
-                <td className="px-4 py-3">{v.type}</td>
+                <td className="px-4 py-3">{v.name}{v.model && v.model !== v.name ? ` / ${v.model}` : ''}</td>
+                <td className="px-4 py-3">{v.type || '—'}</td>
                 <td className="px-4 py-3">{v.maxLoadKg} kg</td>
-                <td className="px-4 py-3 font-mono text-xs">{v.odometer?.toLocaleString()} km</td>
-                <td className="px-4 py-3">₹{Number(v.acquisitionCost).toLocaleString()}</td>
+                <td className="px-4 py-3 font-mono text-xs">{Number(v.odometer || 0).toLocaleString()} km</td>
+                <td className="px-4 py-3">₹{Number(v.acquisitionCost || 0).toLocaleString()}</td>
                 <td className="px-4 py-3"><StatusBadge status={v.status} /></td>
                 <td className="px-4 py-3">
                   <div className="flex justify-end gap-1.5">

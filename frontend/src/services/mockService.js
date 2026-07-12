@@ -57,6 +57,10 @@ export async function mockUpdateDriver(id, data) {
   await delay();
   return patch('drivers', id, data);
 }
+export async function mockUpdateDriverStatus(id, status) {
+  await delay();
+  return patch('drivers', id, { status });
+}
 export async function mockDeleteDriver(id) {
   await delay();
   remove('drivers', id);

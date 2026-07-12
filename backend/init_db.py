@@ -1,20 +1,40 @@
--- schema.sql
--- Database structure for TransitOps based on requirements
+"""
+init_db.py — Run this once to initialize the database.
+Usage: python init_db.py
 
+This will:
+1. Create all tables (safe with IF NOT EXISTS)
+2. Insert default roles  
+3. Insert demo users with hashed passwords
+4. Add new columns if upgrading from older schema
+"""
+
+import os
+from sqlalchemy import create_engine, text
+from dotenv import load_dotenv
+from passlib.context import CryptContext
+
+load_dotenv()
+
+DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://transitops_user:transitops_password@localhost:5432/transitops_db")
+
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+DEMO_PASSWORD = "password123"
+hashed_pw = pwd_context.hash(DEMO_PASSWORD)
+
+print(f"Connecting to database...")
+engine = create_engine(DATABASE_URL)
+
+SCHEMA = f"""
 -- 1. Roles
 CREATE TABLE IF NOT EXISTS roles (
     id SERIAL PRIMARY KEY,
     name VARCHAR(50) UNIQUE NOT NULL
 );
 
--- Insert default roles (safe insert)
 INSERT INTO roles (name) VALUES 
-('Admin'),
-('Fleet Manager'), 
-('Driver'), 
-('Safety Officer'), 
-('Financial Analyst'),
-('Dispatcher')
+('Admin'), ('Fleet Manager'), ('Driver'), ('Safety Officer'), ('Financial Analyst'), ('Dispatcher')
 ON CONFLICT (name) DO NOTHING;
 
 -- 2. Users
@@ -27,14 +47,12 @@ CREATE TABLE IF NOT EXISTS users (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Demo users (password = "password123" bcrypt hash)
--- Generated with: bcrypt.hashpw(b"password123", bcrypt.gensalt()).decode()
 INSERT INTO users (name, email, password_hash, role_id) VALUES
-('Admin User',        'admin@transitops.io',          '$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW', (SELECT id FROM roles WHERE name='Admin')),
-('Fleet Manager',     'fleet.manager@transitops.io',   '$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW', (SELECT id FROM roles WHERE name='Fleet Manager')),
-('Alex Driver',       'driver@transitops.io',          '$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW', (SELECT id FROM roles WHERE name='Driver')),
-('Safety Officer',    'safety.officer@transitops.io',  '$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW', (SELECT id FROM roles WHERE name='Safety Officer')),
-('Financial Analyst', 'analyst@transitops.io',         '$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW', (SELECT id FROM roles WHERE name='Financial Analyst'))
+('Admin User',        'admin@transitops.io',          '{hashed_pw}', (SELECT id FROM roles WHERE name='Admin')),
+('Fleet Manager',     'fleet.manager@transitops.io',   '{hashed_pw}', (SELECT id FROM roles WHERE name='Fleet Manager')),
+('Alex Driver',       'driver@transitops.io',          '{hashed_pw}', (SELECT id FROM roles WHERE name='Driver')),
+('Safety Officer',    'safety.officer@transitops.io',  '{hashed_pw}', (SELECT id FROM roles WHERE name='Safety Officer')),
+('Financial Analyst', 'analyst@transitops.io',         '{hashed_pw}', (SELECT id FROM roles WHERE name='Financial Analyst'))
 ON CONFLICT (email) DO NOTHING;
 
 -- 3. Vehicles
@@ -48,7 +66,6 @@ CREATE TABLE IF NOT EXISTS vehicles (
     odometer DECIMAL(10, 2) DEFAULT 0,
     acquisition_cost DECIMAL(12, 2) NOT NULL,
     status VARCHAR(50) DEFAULT 'Available'
-    -- Status Values: Available, On Trip, In Shop, Retired
 );
 
 -- 4. Drivers
@@ -61,7 +78,6 @@ CREATE TABLE IF NOT EXISTS drivers (
     contact_number VARCHAR(50),
     safety_score DECIMAL(5, 2) DEFAULT 100,
     status VARCHAR(50) DEFAULT 'Available'
-    -- Status Values: Available, On Trip, Off Duty, Suspended
 );
 
 -- 5. Trips
@@ -77,9 +93,12 @@ CREATE TABLE IF NOT EXISTS trips (
     fuel_consumed DECIMAL(10, 2),
     revenue DECIMAL(12, 2) DEFAULT 0,
     status VARCHAR(50) DEFAULT 'Draft',
-    -- Status Values: Draft, Dispatched, Completed, Cancelled
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Add new columns if upgrading
+ALTER TABLE trips ADD COLUMN IF NOT EXISTS fuel_consumed DECIMAL(10, 2);
+ALTER TABLE trips ADD COLUMN IF NOT EXISTS revenue DECIMAL(12, 2) DEFAULT 0;
 
 -- 6. Maintenance Logs
 CREATE TABLE IF NOT EXISTS maintenance_logs (
@@ -89,7 +108,6 @@ CREATE TABLE IF NOT EXISTS maintenance_logs (
     cost DECIMAL(10, 2) NOT NULL,
     log_date DATE NOT NULL,
     status VARCHAR(50) DEFAULT 'Active'
-    -- Status Values: Active, Closed
 );
 
 -- 7. Fuel Logs
@@ -106,11 +124,27 @@ CREATE TABLE IF NOT EXISTS fuel_logs (
 CREATE TABLE IF NOT EXISTS expenses (
     id SERIAL PRIMARY KEY,
     vehicle_id INT REFERENCES vehicles(id) ON DELETE CASCADE,
-    expense_type VARCHAR(100) NOT NULL, -- e.g., Toll, Maintenance, Fuel
+    expense_type VARCHAR(100) NOT NULL,
     cost DECIMAL(10, 2) NOT NULL,
     expense_date DATE NOT NULL
 );
+"""
 
--- Add missing columns to trips if upgrading from old schema
-ALTER TABLE trips ADD COLUMN IF NOT EXISTS fuel_consumed DECIMAL(10, 2);
-ALTER TABLE trips ADD COLUMN IF NOT EXISTS revenue DECIMAL(12, 2) DEFAULT 0;
+with engine.connect() as conn:
+    # Execute each statement separately
+    for statement in SCHEMA.split(';'):
+        statement = statement.strip()
+        if statement:
+            try:
+                conn.execute(text(statement))
+            except Exception as e:
+                print(f"  Warning: {e}")
+    conn.commit()
+
+print("✅ Database initialized successfully!")
+print(f"\n🔑 Demo accounts (password: {DEMO_PASSWORD}):")
+print("  admin@transitops.io           → Admin")
+print("  fleet.manager@transitops.io   → Fleet Manager")
+print("  driver@transitops.io          → Driver")
+print("  safety.officer@transitops.io  → Safety Officer")
+print("  analyst@transitops.io         → Financial Analyst")

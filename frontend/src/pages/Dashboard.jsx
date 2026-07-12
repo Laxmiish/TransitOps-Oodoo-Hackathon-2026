@@ -79,8 +79,8 @@ export default function Dashboard() {
     })();
   }, []);
 
-  const vehicleTypes = useMemo(() => ['All', ...new Set(vehicles.map((v) => v.type))], [vehicles]);
-  const regions = useMemo(() => ['All', ...new Set(vehicles.map((v) => v.region))], [vehicles]);
+  const vehicleTypes = useMemo(() => ['All', ...new Set(vehicles.map((v) => v.type).filter(Boolean))], [vehicles]);
+  const regions = useMemo(() => ['All', ...new Set(vehicles.map((v) => v.region).filter(Boolean))], [vehicles]);
 
   const filteredVehicles = useMemo(
     () =>
