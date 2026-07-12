@@ -15,7 +15,7 @@
   ],
   "routes": [
     {
-      "src": "/(login|vehicles|drivers|trips|maintenance|fuel|expenses|dashboard|reports|users|roles)(/.*)?",
+      "src": "/api/(.*)",
       "dest": "/backend/main.py"
     },
     {

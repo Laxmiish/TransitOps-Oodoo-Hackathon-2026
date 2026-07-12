@@ -9,7 +9,7 @@ ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60
 
 # FastAPI helper to extract token from the 'Authorization' header
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/login")
 
 def create_access_token(data: dict):
     to_encode = data.copy()

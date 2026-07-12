@@ -23,6 +23,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.middleware("http")
+async def strip_api_prefix(request, call_next):
+    if request.scope.get("path", "").startswith("/api"):
+        request.scope["path"] = request.scope["path"][4:]
+    return await call_next(request)
+
 @app.get("/")
 def root():
     return {"message": "Welcome to TransitOps API", "version": "1.0.0"}
